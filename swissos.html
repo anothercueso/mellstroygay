@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwissOS 67</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Geneva&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Desktop background wallpaper */
+            background-image: url('wallpaper.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #5f80b1;
+            /* fallback color */
+
+            /* Use a retro bitmap look font or standard system font imitating Geneva/Chicago */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+            color: #000;
+        }
+
+        /* ── MENU BAR ── */
+        .menubar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 22px;
+            background-color: #eeeeee;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 1px 0px rgba(0, 0, 0, 0.5);
+            font-family: 'Chicago', 'Geneva', sans-serif;
+        }
+
+        .menubar-item {
+            padding: 0 12px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .menubar-item:hover {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .menubar-item.sys-logo {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .menubar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        /* ── DESKTOP ICONS ── */
+        .desktop-icons {
+            position: absolute;
+            top: 30px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .desktop-icon {
+            width: 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .icon-img {
+            width: 48px;
+            height: 48px;
+            background-color: #ccc;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            image-rendering: pixelated;
+        }
+
+        /* Hard drive graphic (CSS drawn) */
+        .hd-icon {
+            background: #d8d8d8;
+            border-radius: 4px;
+            position: relative;
+            box-shadow: inset -2px -2px 0px #888, inset 2px 2px 0px #fff;
+        }
+
+        .hd-icon::before {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            width: 32px;
+            height: 8px;
+            background: #444;
+            border-top: 1px solid #222;
+        }
+
+        .hd-icon::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 4px;
+            height: 4px;
+            background: #0f0;
+            box-shadow: 0 0 2px #0f0;
+        }
+
+        /* Trash graphic */
+        .trash-icon {
+            background: #eee;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            position: relative;
+            box-shadow: inset -2px -2px 0px #aaa, inset 1px 0px 0px #fff;
+            border-top: none;
+        }
+
+        .trash-icon::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -4px;
+            width: 52px;
+            height: 6px;
+            background: #ddd;
+            border: 2px solid #000;
+            border-radius: 2px;
+        }
+
+        .trash-icon::after {
+            content: '||||';
+            color: #aaa;
+            font-size: 16px;
+            letter-spacing: 2px;
+            line-height: 1;
+            font-weight: bold;
+        }
+
+        /* Terminal graphic */
+        .term-icon {
+            background: #111;
+            border-radius: 4px;
+            position: relative;
+            box-shadow: inset -2px -2px 0px #444, inset 2px 2px 0px #888;
+            border: 2px solid #000;
+        }
+
+        .icon-label {
+            background-color: transparent;
+            color: #fff;
+            padding: 2px 4px;
+            font-size: 12px;
+            font-family: 'Geneva', sans-serif;
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+            text-align: center;
+        }
+
+        .desktop-icon:hover .icon-img {
+            filter: invert(100%);
+        }
+
+        .desktop-icon:hover .icon-label,
+        .desktop-icon.selected .icon-label {
+            background-color: #000;
+            color: #fff;
+            text-shadow: none;
+        }
+
+        /* ── CONTEXT MENU ── */
+        .context-menu {
+            position: absolute;
+            z-index: 99999;
+            background: #fff;
+            border: 1px solid #000;
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+            font-family: 'Chicago', sans-serif;
+            font-size: 13px;
+            padding: 2px;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 4px 12px;
+            cursor: pointer;
+        }
+
+        .context-menu-item:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* ── KERNEL PANIC ── */
+        @keyframes systemCrash {
+            0% {
+                filter: invert(0) hue-rotate(0deg);
+                transform: skew(0deg);
+                opacity: 1;
+            }
+
+            10% {
+                filter: invert(1) hue-rotate(90deg);
+                transform: skew(3deg);
+            }
+
+            15% {
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+                filter: invert(0);
+                transform: skew(-5deg) scale(1.05);
+            }
+
+            30% {
+                filter: contrast(5) saturate(5);
+            }
+
+            40% {
+                filter: invert(1);
+                transform: rotate(2deg);
+            }
+
+            50% {
+                transform: skew(20deg) scale(0.9);
+            }
+
+            60% {
+                filter: hue-rotate(180deg) brightness(2);
+            }
+
+            80% {
+                opacity: 0.5;
+            }
+
+            100% {
+                filter: contrast(10) invert(1);
+                transform: scale(1.2) rotate(-5deg);
+                opacity: 1;
+            }
+        }
+
+        .glitching {
+            animation: systemCrash 0.4s infinite alternate;
+            pointer-events: none;
+        }
+
+        #bomb-screen {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Geneva', sans-serif;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .bomb-dialog {
+            border: 2px solid #000;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            max-width: 400px;
+        }
+
+        .bomb-icon {
+            font-size: 50px;
+        }
+
+        /* ── WINDOW ── */
+        .window {
+            position: absolute;
+            top: 15vh;
+            left: 20vw;
+            width: 500px;
+            height: 350px;
+            background-color: #dddddd;
+            border: 1px solid #000;
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 1);
+            display: flex;
+            flex-direction: column;
+            box-sizing: content-box;
+            /* Inner platinum bevel */
+            outline: 1px solid #fff;
+            outline-offset: -2px;
+            outline: 2px solid rgba(255, 255, 255, 0.7);
+            outline-offset: -2px;
+        }
+
+        .window::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            border-right: 1px solid #777;
+            border-bottom: 1px solid #777;
+            pointer-events: none;
+        }
+
+        /* Title bar */
+        .title-bar {
+            height: 24px;
+            background-color: #c0c0c0;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            position: relative;
+            /* Mac OS 9 pinstripe effect */
+            background-image: repeating-linear-gradient(to bottom,
+                    #cccccc,
+                    #cccccc 1px,
+                    #999999 1px,
+                    #999999 2px);
+            cursor: pointer;
+        }
+
+        .close-btn {
+            width: 13px;
+            height: 13px;
+            background-color: #fff;
+            border: 1px solid #000;
+            margin-right: 8px;
+            margin-left: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            box-shadow: inset -1px -1px 0px #888;
+        }
+
+        .close-btn:active {
+            background-color: #888;
+            box-shadow: inset 1px 1px 0px #000;
+        }
+
+        .close-btn-inner {
+            width: 5px;
+            height: 5px;
+            border: 1px solid #000;
+        }
+
+        .close-btn:active .close-btn-inner {
+            border-color: #fff;
+        }
+
+        .title-text {
+            /* the text sits in a label that masks the pinstripes */
+            background-color: #dddddd;
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: bold;
+            font-family: 'Chicago', sans-serif;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .zoom-btn {
+            width: 13px;
+            height: 13px;
+            background-color: #fff;
+            border: 1px solid #000;
+            position: absolute;
+            right: 8px;
+            z-index: 2;
+            box-shadow: inset -1px -1px 0px #888;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .zoom-btn::after {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border: 1px solid #000;
+        }
+
+        .collapse-btn {
+            width: 13px;
+            height: 13px;
+            background-color: #fff;
+            border: 1px solid #000;
+            position: absolute;
+            right: 25px;
+            z-index: 2;
+            box-shadow: inset -1px -1px 0px #888;
+        }
+
+        .collapse-btn::before {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            height: 2px;
+            background: #000;
+        }
+
+        /* ── WINDOW CONTENT ── */
+        .window-content {
+            flex: 1;
+            background-color: #ffffff;
+            border: 1px solid #888;
+            margin: 2px;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Inner scrollbars imitation */
+        .scrollbars {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 16px;
+            background: #eee;
+            border-left: 1px solid #888;
+        }
+
+        .scroll-thumb {
+            width: 16px;
+            height: 48px;
+            background: #fff;
+            border: 1px solid #888;
+            border-top: none;
+            border-bottom: none;
+            background-image: repeating-linear-gradient(to bottom, transparent, transparent 2px, #888 2px, #888 3px);
+            background-clip: content-box;
+            padding: 8px 3px;
+        }
+
+        h1,
+        h2 {
+            font-family: 'Chicago', sans-serif;
+            margin-bottom: 12px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-family: 'Geneva', sans-serif;
+            font-size: 14px;
+        }
+
+        .btn {
+            background-color: #fff;
+            border: 2px solid #000;
+            border-radius: 6px;
+            padding: 4px 16px;
+            font-family: 'Chicago', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: inset -1px -2px 0px #aaa, inset 1px 2px 0px #fff, 1px 1px 0px #000;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            box-shadow: inset 1px 2px 0px #aaa, inset -1px -2px 0px #fff;
+            background: #eee;
+        }
+
+        .default-btn {
+            outline: 2px solid rgba(0, 0, 0, 0.5);
+            outline-offset: 3px;
+            border-width: 3px;
+        }
+
+        .content-box {
+            border: 1px solid #000;
+            padding: 10px;
+            box-shadow: 1px 1px 0 #fff;
+            background: #eee;
+        }
+
+        /* ── BOOT SCREEN ── */
+        #boot-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .happy-mac {
+            width: 100px;
+            height: 100px;
+            border: 4px solid #000;
+            border-radius: 12px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            position: relative;
+            background: #eee;
+            margin-bottom: 30px;
+            animation: bounce 1s infinite alternate;
+        }
+
+        .happy-mac::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            width: 12px;
+            height: 18px;
+            background: #000;
+            box-shadow: 45px 0 0 #000;
+        }
+
+        .happy-mac::after {
+            content: '';
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 10px;
+            border: 4px solid #000;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+
+            to {
+                transform: translateY(-10px);
+            }
+        }
+
+        .loading-bar-wrap {
+            width: 300px;
+            height: 20px;
+            border: 2px solid #000;
+            padding: 2px;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background: #000;
+            width: 0%;
+            animation: load 2.5s ease-in-out forwards;
+        }
+
+        @keyframes load {
+            0% {
+                width: 0%;
+            }
+
+            50% {
+                width: 40%;
+            }
+
+            80% {
+                width: 70%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        #boot-text {
+            margin-top: 15px;
+            font-family: 'Geneva', sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- BOOT UP SEQUENCE -->
+    <div id="boot-screen">
+        <div class="happy-mac"></div>
+        <div class="loading-bar-wrap">
+            <div class="loading-bar"></div>
+        </div>
+        <div id="boot-text">Welcome to SwissOS 67</div>
+    </div>
+
+    <!-- MAIN OS -->
+    <div class="menubar">
+        <div class="menubar-item sys-logo">✚</div>
+        <div class="menubar-item">File</div>
+        <div class="menubar-item">Edit</div>
+        <div class="menubar-item">View</div>
+        <div class="menubar-item">Special</div>
+        <div class="menubar-item">Help</div>
+
+        <div class="menubar-right menubar-item" id="sys-time">10:45 AM</div>
+    </div>
+
+    <!-- DESKTOP -->
+    <div class="desktop-icon" id="icon-hd" style="top: 30px; right: 20px; position:absolute;"
+        ondblclick="openWindow('hd-window')">
+        <div class="icon-img hd-icon"></div>
+        <div class="icon-label">Swiss Drive</div>
+    </div>
+
+    <div class="desktop-icon" id="icon-term" style="top: 130px; right: 20px; position:absolute;"
+        ondblclick="openConsole()">
+        <div class="icon-img term-icon">
+            <div style="font-family:'VT323',monospace; font-size:24px; font-weight:bold; color:#fff; text-shadow:none;">
+                &gt;_</div>
+        </div>
+        <div class="icon-label">Console</div>
+    </div>
+
+    <div class="desktop-icon" id="icon-trash" style="top: 230px; right: 20px; position:absolute;"
+        ondblclick="openWindow('trash-window')" oncontextmenu="showContextMenu(event)">
+        <div class="icon-img trash-icon" id="trash-icon-img"></div>
+        <div class="icon-label">Trash</div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div id="trash-context-menu" class="context-menu">
+        <div class="context-menu-item" onclick="emptyTrash()">Empty Trash</div>
+    </div>
+
+    <!-- BOMB SCREEN -->
+    <div id="bomb-screen">
+        <div class="bomb-dialog">
+            <div class="bomb-icon">💣</div>
+            <div style="font-weight:bold; font-size:16px;">Sorry, a system error occurred.<br><br>Restart to fix.</div>
+        </div>
+    </div>
+
+    <!-- HD WINDOW -->
+    <div class="window" id="hd-window" style="display:none; left: 5vw; top: 5vh; width: 400px; height: 300px;">
+        <div class="title-bar" onmousedown="startDrag(event, 'hd-window')">
+            <div class="close-btn" onclick="document.getElementById('hd-window').style.display='none'">
+                <div class="close-btn-inner"></div>
+            </div>
+            <div class="title-text">Swiss Drive</div>
+            <div class="collapse-btn"></div>
+            <div class="zoom-btn"></div>
+        </div>
+        <div class="window-content" style="display:flex; flex-wrap:wrap; gap:20px; align-content:flex-start;">
+            <div style="text-align:center; cursor:pointer;">
+                <div style="font-size:30px;">📄</div>
+                <div style="font-size:12px;font-family:'Geneva',sans-serif;">read_me.txt</div>
+            </div>
+            <div style="text-align:center; cursor:pointer;">
+                <div style="font-size:30px;">📁</div>
+                <div style="font-size:12px;font-family:'Geneva',sans-serif;">System</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRASH WINDOW -->
+    <div class="window" id="trash-window" style="display:none; left: 10vw; top: 40vh; width: 400px; height: 250px;">
+        <div class="title-bar" onmousedown="startDrag(event, 'trash-window')">
+            <div class="close-btn" onclick="document.getElementById('trash-window').style.display='none'">
+                <div class="close-btn-inner"></div>
+            </div>
+            <div class="title-text">Trash</div>
+            <div class="collapse-btn"></div>
+            <div class="zoom-btn"></div>
+        </div>
+        <div class="window-content" id="trash-content"
+            style="display:flex; flex-wrap:wrap; gap:20px; align-content:flex-start;">
+            <!-- dropped items appear here -->
+        </div>
+    </div>
+
+    <!-- MAIN OS WINDOW (TRANSITION SUCCESS) -->
+    <div class="window" id="main-window">
+        <!-- TITLE BAR -->
+        <div class="title-bar" id="title-bar">
+            <div class="close-btn" onclick="document.getElementById('main-window').style.display='none'">
+                <div class="close-btn-inner"></div>
+            </div>
+            <div class="title-text">Welcome to SwissOS</div>
+            <div class="collapse-btn"></div>
+            <div class="zoom-btn"></div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="window-content">
+            <div class="scrollbars">
+                <div
+                    style="height:12px; border-bottom:1px solid #888; background:#fff; text-align:center; font-size:10px; line-height:10px;">
+                    ▲</div>
+                <div class="scroll-thumb"></div>
+                <div
+                    style="position:absolute; bottom:0; height:12px; width:100%; border-top:1px solid #888; background:#fff; text-align:center; font-size:10px; line-height:10px;">
+                    ▼</div>
+            </div>
+
+            <h1>Transcendence Complete!</h1>
+            <p>You have successfully escaped the regular universe and landed inside <b>SwissOS 67</b>.</p>
+
+            <div class="content-box">
+                <p>System Specifications:<br>
+                    CPU: PowerPC G3 (Emulated)<br>
+                    RAM: 128 MB VRAM<br>
+                    Universe: 7</p>
+            </div>
+
+            <p style="margin-top: 20px;">Use the completely functional* operating system controls. Enjoy the platinum
+                interface colors that remind you of the early 2000s.</p>
+
+            <div style="display:flex; justify-content:flex-end; gap: 10px; margin-top:20px;">
+                <button class="btn"
+                    onclick="document.getElementById('main-window').style.display='none'">Cancel</button>
+                <button class="btn default-btn"
+                    onclick="document.getElementById('main-window').style.display='none'">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONSOLE WINDOW -->
+    <div class="window" id="console-window" style="display:none; left: 10vw; top: 10vh; width: 450px; height: 300px;">
+        <!-- TITLE BAR -->
+        <div class="title-bar" onmousedown="startDrag(event, 'console-window')">
+            <div class="close-btn" onclick="document.getElementById('console-window').style.display='none'">
+                <div class="close-btn-inner"></div>
+            </div>
+            <div class="title-text">Console</div>
+            <div class="collapse-btn"></div>
+            <div class="zoom-btn"></div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="window-content"
+            style="background-color: #000; color: #0f0; font-family: 'VT323', monospace; padding: 10px; font-size: 18px; display:flex; flex-direction:column;"
+            onclick="document.getElementById('cli-input').focus()">
+            <div id="cli-output" style="white-space: pre-wrap; margin-bottom: 5px;">SwissOS Terminal v1.0.0
+                Type your commands here...</div>
+            <div style="display: flex;">
+                <span id="cli-prompt" style="margin-right: 8px;">C:\&gt;</span>
+                <input type="text" id="cli-input"
+                    style="flex:1; background:transparent; border:none; color:#0f0; font-family:'VT323', monospace; font-size:18px; outline:none;"
+                    autocomplete="off" spellcheck="false" onkeydown="handleConsole(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- DOOM WINDOW -->
+    <div class="window" id="doom-window"
+        style="display:none; left: 15vw; top: 5vh; width: 640px; height: 440px; flex-direction:column;">
+        <div class="title-bar" onmousedown="startDrag(event, 'doom-window')">
+            <div class="close-btn"
+                onclick="document.getElementById('doom-window').style.display='none'; doomActive=false;">
+                <div class="close-btn-inner"></div>
+            </div>
+            <div class="title-text">DOOM v0.1 (Swiss JS Engine)</div>
+            <div class="collapse-btn"></div>
+            <div class="zoom-btn"></div>
+        </div>
+        <div class="window-content"
+            style="padding:0; background:#000; overflow:hidden; display:flex; align-items:center; justify-content:center;"
+            onclick="document.getElementById('doomCanvas').focus()">
+            <canvas id="doomCanvas" width="640" height="400" tabindex="0"
+                style="outline:none; width:100%; cursor:crosshair; display:block;"></canvas>
+        </div>
+    </div>
+
+    <audio id="sys-bgm" src="music.mp3" loop></audio>
+    <audio id="sys-click" src="click.mp3" preload="auto"></audio>
+
+    <script>
+        // Global click sound
+        document.addEventListener('mousedown', () => {
+            const clickSound = document.getElementById('sys-click');
+            clickSound.currentTime = 0;
+            clickSound.volume = 0.5; // не слишком громко
+            clickSound.play().catch(e => { });
+        });
+
+        // Update clock
+        function updateTime() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            m = m < 10 ? '0' + m : m;
+            document.getElementById('sys-time').textContent = `${h}:${m} ${ampm}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Boot sequence timeout
+        setTimeout(() => {
+            const boot = document.getElementById('boot-screen');
+            boot.style.opacity = '0';
+            setTimeout(() => {
+                boot.style.display = 'none';
+
+                // Play music quietly
+                const bgm = document.getElementById('sys-bgm');
+                bgm.volume = 0.15; // тихо играем
+                bgm.play().catch(e => {
+                    // if autoplay blocked, play on first click
+                    document.addEventListener('click', () => bgm.play(), { once: true });
+                });
+            }, 500);
+        }, 2800);
+
+        // simple drag logic
+        let draggedWin = null;
+        let offset = [0, 0];
+
+        function startDrag(e, winId) {
+            draggedWin = document.getElementById(winId);
+            // bring to front
+            document.querySelectorAll('.window').forEach(w => w.style.zIndex = 10);
+            draggedWin.style.zIndex = 11;
+
+            offset = [
+                draggedWin.offsetLeft - e.clientX,
+                draggedWin.offsetTop - e.clientY
+            ];
+        }
+
+        document.addEventListener('mouseup', function () {
+            draggedWin = null;
+        }, true);
+
+        document.addEventListener('mousemove', function (e) {
+            if (draggedWin) {
+                e.preventDefault();
+                draggedWin.style.left = (e.clientX + offset[0]) + 'px';
+                draggedWin.style.top = (e.clientY + offset[1]) + 'px';
+            }
+        }, true);
+
+        // Attach dragging to main window
+        document.getElementById('title-bar').onmousedown = (e) => startDrag(e, 'main-window');
+
+        // Desktop Icons Dragging
+        let draggedIcon = null;
+        let iconOffset = [0, 0];
+        let hdInTrash = false;
+
+        function makeIconDraggable(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.onmousedown = (e) => {
+                if (e.button !== 0) return; // Left click only
+                draggedIcon = el;
+                // Since user might drag from different points, calculate offset
+                iconOffset = [el.offsetLeft - e.clientX, el.offsetTop - e.clientY];
+                el.classList.add('selected');
+            };
+        }
+
+        makeIconDraggable('icon-hd');
+        makeIconDraggable('icon-term');
+        makeIconDraggable('icon-trash');
+
+        document.addEventListener('mouseup', function (e) {
+            if (draggedIcon) {
+                draggedIcon.classList.remove('selected');
+
+                // Collision check for dropping files into Trash!
+                if (draggedIcon.id === 'icon-hd') {
+                    const trash = document.getElementById('icon-trash');
+                    // bounding box simple check
+                    const dx = (draggedIcon.offsetLeft + 32) - (trash.offsetLeft + 32);
+                    const dy = (draggedIcon.offsetTop + 32) - (trash.offsetTop + 32);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 60) {
+                        // Throwing hard drive into trash...
+                        draggedIcon.style.display = 'none';
+                        hdInTrash = true;
+
+                        // visually show trash is full
+                        document.getElementById('trash-icon-img').style.background = '#444';
+
+                        // add visual item to trash window
+                        document.getElementById('trash-content').innerHTML = `
+                            <div style="text-align:center; opacity:0.6;">
+                                <div class="hd-icon" style="width:48px;height:48px;margin:0 auto;border:2px solid #000;"></div>
+                                <div style="font-size:12px;font-family:'Geneva',sans-serif;margin-top:4px;">Swiss Drive</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                draggedIcon = null;
+            }
+            draggedWin = null;
+        }, true);
+
+        document.addEventListener('mousemove', function (e) {
+            if (draggedWin) {
+                e.preventDefault();
+                draggedWin.style.left = (e.clientX + offset[0]) + 'px';
+                draggedWin.style.top = (e.clientY + offset[1]) + 'px';
+            }
+            if (draggedIcon) {
+                e.preventDefault();
+                draggedIcon.style.left = (e.clientX + iconOffset[0]) + 'px';
+                draggedIcon.style.top = (e.clientY + iconOffset[1]) + 'px';
+                draggedIcon.style.right = 'auto'; // Disable flex right anchor
+            }
+        }, true);
+
+        // Window open
+        function openWindow(id) {
+            const win = document.getElementById(id);
+            win.style.display = 'flex';
+            // Bring to front
+            document.querySelectorAll('.window').forEach(w => w.style.zIndex = 10);
+            win.style.zIndex = 12;
+        }
+
+        // Trash Context Menu
+        const ctxMenu = document.getElementById('trash-context-menu');
+        function showContextMenu(e) {
+            e.preventDefault();
+            ctxMenu.style.display = 'block';
+            ctxMenu.style.left = e.clientX + 'px';
+            ctxMenu.style.top = e.clientY + 'px';
+        }
+
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.className !== 'context-menu-item') {
+                ctxMenu.style.display = 'none';
+            }
+        });
+
+        function emptyTrash() {
+            ctxMenu.style.display = 'none';
+            if (hdInTrash) {
+                // KERNEL PANIC
+                kernelPanic();
+            } else {
+                document.getElementById('trash-content').innerHTML = '';
+            }
+        }
+
+        function kernelPanic() {
+            // Apply heavy glitch CSS to body
+            document.body.classList.add('glitching');
+
+            // Generate ear piercing sound
+            const actx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = actx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(80, actx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1400, actx.currentTime + 1.5);
+
+            const lfo = actx.createOscillator();
+            lfo.frequency.value = 60; // 60Hz hum modulation
+
+            const gain = actx.createGain();
+            lfo.connect(gain.gain);
+            osc.connect(gain);
+            gain.connect(actx.destination);
+
+            osc.start(); lfo.start();
+            document.getElementById('sys-bgm').pause(); // stop chill music
+
+            // Wait 1.5 seconds then show bomb
+            setTimeout(() => {
+                document.body.classList.remove('glitching');
+                document.querySelectorAll('.window, .desktop-icon, .menubar').forEach(e => e.style.display = 'none');
+
+                document.body.style.backgroundImage = 'none';
+                document.body.style.backgroundColor = '#fff';
+
+                document.getElementById('bomb-screen').style.display = 'flex';
+
+                // stop the harsh noise, play a flatline or just stop
+                osc.stop(); lfo.stop();
+            }, 1500);
+        }
+
+        // Console Logic
+        function openConsole() {
+            const win = document.getElementById('console-window');
+            win.style.display = 'flex';
+            win.style.zIndex = 12;
+            document.getElementById('cli-input').focus();
+        }
+
+        let consoleState = 'NORMAL';
+
+        function handleConsole(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('cli-input');
+                const out = document.getElementById('cli-output');
+                const prompt = document.getElementById('cli-prompt');
+                const val = input.value.trim();
+
+                if (consoleState === 'AWAITING_PASS') {
+                    out.textContent += '\nPassword: ********';
+                    if (btoa(val) === 'aWZ1Y2tmdXJyaWVz') {
+                        out.textContent += '\nAccess Granted. Initializing DOOM engine...';
+                        setTimeout(() => {
+                            const doomWin = document.getElementById('doom-window');
+                            doomWin.style.display = 'flex';
+                            doomWin.style.zIndex = 13;
+                            startDoom();
+                        }, 800);
+                    } else {
+                        out.textContent += '\nAccess Denied.';
+                    }
+                    consoleState = 'NORMAL';
+                    input.type = 'text';
+                    prompt.textContent = 'C:\\> ';
+                } else {
+                    out.textContent += '\nC:\\> ' + val;
+                    if (btoa(val.toLowerCase()) === 'aXdhbm5hcGxheWRvb20=') {
+                        out.textContent += '\nAccess requires root privileges.\nPassword: ';
+                        consoleState = 'AWAITING_PASS';
+                        input.type = 'password';
+                        prompt.textContent = '';
+                    } else if (val !== '') {
+                        out.textContent += '\nCommand not recognized. Try "iwannaplaydoom"';
+                    }
+                }
+
+                input.value = '';
+                // auto scroll
+                out.parentElement.scrollTop = out.parentElement.scrollHeight;
+            }
+        }
+
+        // DOOM Engine (Raycaster)
+        let doomActive = false;
+        let dKeys = {};
+
+        window.addEventListener('keydown', e => {
+            if (document.activeElement.id === 'doomCanvas') {
+                dKeys[e.code] = true;
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', e => {
+            dKeys[e.code] = false;
+        });
+
+        function startDoom() {
+            if (doomActive) return;
+            doomActive = true;
+            const cvs = document.getElementById('doomCanvas');
+            cvs.focus();
+            const ctx = cvs.getContext('2d');
+
+            const mapStr = [
+                "111111111111111111111111",
+                "1   222          333   1",
+                "1   2 2          3 3   1",
+                "1   222          333   1",
+                "1                      1",
+                "1        444444        1",
+                "1             4        1",
+                "1   2         4        1",
+                "1   2        44        1",
+                "1                      1",
+                "111111111111111111111111",
+            ];
+            const mapData = mapStr.map(row => row.split('').map(c => c === ' ' ? 0 : parseInt(c)));
+
+            const w = 640; const h = 400;
+            let px = 10.5, py = 5.5;
+            let dirX = -1, dirY = 0;
+            let planeX = 0, planeY = 0.66;
+            let mvSpd = 0.08; let rotSpd = 0.05;
+
+            function raycast() {
+                if (!doomActive) return;
+                requestAnimationFrame(raycast);
+
+                // Movement
+                if (dKeys['KeyW'] || dKeys['ArrowUp']) {
+                    if (mapData[Math.floor(py)][Math.floor(px + dirX * mvSpd)] === 0) px += dirX * mvSpd;
+                    if (mapData[Math.floor(py + dirY * mvSpd)][Math.floor(px)] === 0) py += dirY * mvSpd;
+                }
+                if (dKeys['KeyS'] || dKeys['ArrowDown']) {
+                    if (mapData[Math.floor(py)][Math.floor(px - dirX * mvSpd)] === 0) px -= dirX * mvSpd;
+                    if (mapData[Math.floor(py - dirY * mvSpd)][Math.floor(px)] === 0) py -= dirY * mvSpd;
+                }
+                // Mouse equivalent rotation with A/D for modern feel, or arrow keys
+                if (dKeys['ArrowRight'] || dKeys['KeyD']) {
+                    let od = dirX; dirX = dirX * Math.cos(-rotSpd) - dirY * Math.sin(-rotSpd); dirY = od * Math.sin(-rotSpd) + dirY * Math.cos(-rotSpd);
+                    let op = planeX; planeX = planeX * Math.cos(-rotSpd) - planeY * Math.sin(-rotSpd); planeY = op * Math.sin(-rotSpd) + planeY * Math.cos(-rotSpd);
+                }
+                if (dKeys['ArrowLeft'] || dKeys['KeyA']) {
+                    let od = dirX; dirX = dirX * Math.cos(rotSpd) - dirY * Math.sin(rotSpd); dirY = od * Math.sin(rotSpd) + dirY * Math.cos(rotSpd);
+                    let op = planeX; planeX = planeX * Math.cos(rotSpd) - planeY * Math.sin(rotSpd); planeY = op * Math.sin(rotSpd) + planeY * Math.cos(rotSpd);
+                }
+
+                // Clear floor/ceiling
+                ctx.fillStyle = '#383838'; ctx.fillRect(0, 0, w, h / 2);
+                ctx.fillStyle = '#6b7280'; ctx.fillRect(0, h / 2, w, h / 2);
+
+                // Raycasting Loop
+                for (let x = 0; x < w; x += 2) { // Resolution optimization by 2px steps
+                    let camX = 2 * x / w - 1;
+                    let rdX = dirX + planeX * camX;
+                    let rdY = dirY + planeY * camX;
+                    let mapX = Math.floor(px); let mapY = Math.floor(py);
+
+                    let ddx = (rdX === 0) ? 1e30 : Math.abs(1 / rdX);
+                    let ddy = (rdY === 0) ? 1e30 : Math.abs(1 / rdY);
+                    let sdx, sdy, stX, stY;
+
+                    if (rdX < 0) { stX = -1; sdx = (px - mapX) * ddx; }
+                    else { stX = 1; sdx = (mapX + 1 - px) * ddx; }
+                    if (rdY < 0) { stY = -1; sdy = (py - mapY) * ddy; }
+                    else { stY = 1; sdy = (mapY + 1 - py) * ddy; }
+
+                    let hit = 0, side;
+                    while (hit === 0) {
+                        if (sdx < sdy) { sdx += ddx; mapX += stX; side = 0; }
+                        else { sdy += ddy; mapY += stY; side = 1; }
+                        if (mapData[mapY] && mapData[mapY][mapX] > 0) hit = 1;
+                    }
+
+                    let perp = (side === 0) ? (sdx - ddx) : (sdy - ddy);
+                    let lh = Math.floor(h / perp);
+                    let dStart = Math.max(0, -lh / 2 + h / 2);
+                    let dEnd = Math.min(h - 1, lh / 2 + h / 2);
+
+                    let colors = ['#000', '#9ca3af', '#a855f7', '#f43f5e', '#3b82f6'];
+                    let c = colors[mapData[mapY][mapX]] || '#fff';
+
+                    ctx.fillStyle = c;
+                    ctx.fillRect(x, dStart, 2, dEnd - dStart);
+                    if (side === 1) { // Shadow on Y walls
+                        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                        ctx.fillRect(x, dStart, 2, dEnd - dStart);
+                    }
+                }
+
+                // Draw Gun
+                ctx.fillStyle = '#222';
+                ctx.beginPath();
+                ctx.moveTo(320 - 40, 400);
+                ctx.lineTo(320 - 15, 280);
+                ctx.lineTo(320 + 15, 280);
+                ctx.lineTo(320 + 40, 400);
+                ctx.fill();
+                ctx.fillStyle = '#111';
+                ctx.fillRect(320 - 6, 280, 12, 120);
+
+                // Crosshair
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+                ctx.fillRect(320 - 8, 200 - 1, 16, 2);
+                ctx.fillRect(320 - 1, 200 - 8, 2, 16);
+            }
+
+            raycast();
+        }
+    </script>
+</body>
+
+</html>
